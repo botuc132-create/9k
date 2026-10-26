@@ -1,0 +1,45 @@
+
+name: Build FF Aim Trainer APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "source.zip"
+      - ".github/workflows/main.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Extract source
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y unzip
+          unzip source.zip -d extracted
+          test -f extracted/FFAimTrainer/settings.gradle.kts
+
+      - name: Build APK
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Compile Android app
+        working-directory: extracted/FFAimTrainer
+        run: gradle assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: FF-Aim-Trainer-APK
+          path: extracted/FFAimTrainer/app/build/outputs/apk/debug/app-debug.apk
